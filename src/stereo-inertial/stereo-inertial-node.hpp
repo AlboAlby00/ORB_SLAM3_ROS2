@@ -38,11 +38,11 @@ private:
     std::thread *syncThread_;
 
     // IMU
-    queue<ImuMsg::SharedPtr> imuBuf_;
+    std::queue<ImuMsg::SharedPtr> imuBuf_;
     std::mutex bufMutex_;
 
     // Image
-    queue<ImageMsg::SharedPtr> imgLeftBuf_, imgRightBuf_;
+    std::queue<ImageMsg::SharedPtr> imgLeftBuf_, imgRightBuf_;
     std::mutex bufMutexLeft_, bufMutexRight_;
 
     bool doRectify_;

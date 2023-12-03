@@ -1,5 +1,4 @@
 #include "monocular-slam-node.hpp"
-
 #include<opencv2/core/core.hpp>
 
 using std::placeholders::_1;
@@ -39,5 +38,6 @@ void MonocularSlamNode::GrabImage(const ImageMsg::SharedPtr msg)
     }
 
     std::cout<<"one frame has been sent"<<std::endl;
-    m_SLAM->TrackMonocular(m_cvImPtr->image, Utility::StampToSec(msg->header.stamp));
+    Sophus::SE3f camera_pose = m_SLAM->TrackMonocular(m_cvImPtr->image, Utility::StampToSec(msg->header.stamp));
+
 }

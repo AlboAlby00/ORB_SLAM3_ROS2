@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.5)
 project(orbslam3)
 
 # You should set the PYTHONPATH to your own python site-packages path
-set(ENV{PYTHONPATH} "/opt/ros/foxy/lib/python3.8/site-packages/")
+set(ENV{PYTHONPATH} "/opt/ros/galactic/lib/python3.8/site-packages/")
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/CMakeModules)
 
@@ -18,6 +18,7 @@ endif()
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(sensor_msgs REQUIRED)
+find_package(nav_msgs REQUIRED)
 find_package(cv_bridge REQUIRED)
 find_package(message_filters REQUIRED)
 find_package(Sophus REQUIRED)
@@ -40,6 +41,12 @@ add_executable(mono
 )
 ament_target_dependencies(mono rclcpp sensor_msgs cv_bridge ORB_SLAM3 Pangolin)
 
+add_executable(mono-inertial
+  src/monocular-inertial/monocular-inertial.cpp
+  src/monocular-inertial/monocular-inertial-node.cpp
+)
+ament_target_dependencies(mono-inertial rclcpp sensor_msgs nav_msgs cv_bridge ORB_SLAM3 Pangolin)
+
 add_executable(rgbd
   src/rgbd/rgbd.cpp
   src/rgbd/rgbd-slam-node.cpp
@@ -59,7 +66,7 @@ add_executable(stereo-inertial
 )
 ament_target_dependencies(stereo-inertial rclcpp sensor_msgs cv_bridge ORB_SLAM3 Pangolin)
 
-install(TARGETS mono rgbd stereo stereo-inertial
+install(TARGETS mono mono-inertial rgbd stereo stereo-inertial
   DESTINATION lib/${PROJECT_NAME})
 
 # Install launch files.
