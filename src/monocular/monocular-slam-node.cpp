@@ -4,7 +4,7 @@
 using std::placeholders::_1;
 
 MonocularSlamNode::MonocularSlamNode(ORB_SLAM3::System* pSLAM)
-:   Node("ORB_SLAM3_ROS2")
+:   Node("ORB_SLAM3_ROS2") , m_previous_x(0.0), m_previous_y(0.0), m_previous_z(0.0), m_taw_low_pass(1000)
 {
     m_SLAM = pSLAM;
     // std::cout << "slam changed" << std::endl;
@@ -13,16 +13,17 @@ MonocularSlamNode::MonocularSlamNode(ORB_SLAM3::System* pSLAM)
         10,
         std::bind(&MonocularSlamNode::GrabImage, this, std::placeholders::_1));
     std::cout << "slam changed" << std::endl;
+
+    m_pose_publisher = this->create_publisher<PointMsg>("/crazyflie/camera_position", 10);
+    m_previous_time = now();
 }
 
 MonocularSlamNode::~MonocularSlamNode()
 {
     // Stop all threads
     m_SLAM->Shutdown();
-
-    // Save camera trajectory
-    m_SLAM->SaveKeyFrameTrajectoryTUM("KeyFrameTrajectory.txt");
 }
+
 
 void MonocularSlamNode::GrabImage(const ImageMsg::SharedPtr msg)
 {
@@ -37,7 +38,32 @@ void MonocularSlamNode::GrabImage(const ImageMsg::SharedPtr msg)
         return;
     }
 
-    std::cout<<"one frame has been sent"<<std::endl;
+    //std::cout<<"one frame has been sent"<<std::endl;
     Sophus::SE3f camera_pose = m_SLAM->TrackMonocular(m_cvImPtr->image, Utility::StampToSec(msg->header.stamp));
+
+    PointMsg::SharedPtr pose_msg = std::make_shared<PointMsg>();
+
+    rclcpp::Duration dt = now() - m_previous_time; 
+
+    // filter
+    double x = m_previous_x + (m_taw_low_pass / (dt.seconds() + m_taw_low_pass)) * (camera_pose.translation().x() - m_previous_x);
+    double y = m_previous_y + (m_taw_low_pass / (dt.seconds() + m_taw_low_pass)) * (camera_pose.translation().y() - m_previous_y);
+    double z = m_previous_z + (m_taw_low_pass / (dt.seconds() + m_taw_low_pass)) * (camera_pose.translation().z() - m_previous_z);
+    m_previous_x = x;
+    m_previous_y = y;
+    m_previous_z = z;
+    
+    // this is for simulation
+    pose_msg->point.x = - z;
+    pose_msg->point.y = x;
+    pose_msg->point.z = y;
+
+    // this is for real world
+
+    //pose_msg->point.x = 0;
+    //pose_msg->point.y = 0;
+    //pose_msg->point.z = z;
+
+    m_pose_publisher->publish(*pose_msg);
 
 }

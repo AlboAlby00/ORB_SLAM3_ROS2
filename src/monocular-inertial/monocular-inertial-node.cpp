@@ -18,7 +18,7 @@ MonocularInertialNode::MonocularInertialNode(ORB_SLAM3::System* pSLAM)
         10,
         std::bind(&MonocularInertialNode::GrabImu, this, std::placeholders::_1));
 
-    m_pose_publisher = this->create_publisher<PointMsg>("/camera_position", 10);
+    m_pose_publisher = this->create_publisher<PointMsg>("/crazyflie/camera_position", 10);
     
     syncThread_ = new std::thread(&MonocularInertialNode::SyncWithImu, this);
 
@@ -30,8 +30,6 @@ MonocularInertialNode::~MonocularInertialNode()
 {
     // Stop all threads
     m_SLAM->Shutdown();
-    // Save camera trajectory
-    m_SLAM->SaveKeyFrameTrajectoryTUM("KeyFrameTrajectory.txt");
 }
 
 void MonocularInertialNode::GrabImage(const ImageMsg::SharedPtr msg)
@@ -106,10 +104,13 @@ void MonocularInertialNode::SyncWithImu()
             m_previous_y = y;
             m_previous_z = z;
             
-
+            // this is for simulation
             pose_msg->point.x = - z;
             pose_msg->point.y = x;
             pose_msg->point.z = y;
+
+            // this is for real world
+            
 
             RCLCPP_DEBUG(this->get_logger(), "x: %f, y: %f, z: %f", pose_msg->point.x, pose_msg->point.y, pose_msg->point.z);
 

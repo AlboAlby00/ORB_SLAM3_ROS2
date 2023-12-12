@@ -7,8 +7,6 @@
 #include "geometry_msgs/msg/point_stamped.hpp"
 #include <cv_bridge/cv_bridge.h>
 
-
-
 #include "System.h"
 #include "Frame.h"
 #include "Map.h"
