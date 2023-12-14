@@ -9,7 +9,7 @@ MonocularInertialNode::MonocularInertialNode(ORB_SLAM3::System* pSLAM)
     m_SLAM = pSLAM;
 
     m_image_subscriber = this->create_subscription<ImageMsg>(
-        "camera",
+        "/camera",
         10,
         std::bind(&MonocularInertialNode::GrabImage, this, std::placeholders::_1));
 
@@ -18,7 +18,7 @@ MonocularInertialNode::MonocularInertialNode(ORB_SLAM3::System* pSLAM)
         10,
         std::bind(&MonocularInertialNode::GrabImu, this, std::placeholders::_1));
 
-    m_pose_publisher = this->create_publisher<PointMsg>("/crazyflie/camera_position", 10);
+    m_pose_publisher = this->create_publisher<PointMsg>("/crazyflie/camera_position_disaligned", 10);
     
     syncThread_ = new std::thread(&MonocularInertialNode::SyncWithImu, this);
 
@@ -59,6 +59,7 @@ void MonocularInertialNode::SyncWithImu()
         cv::Mat image;
         double tImage;
         double tImu;
+
         if (!imageBuf_ .empty() && !imuBuf_.empty())
         {
             tImage = Utility::StampToSec(imageBuf_.front()->header.stamp);
@@ -88,6 +89,7 @@ void MonocularInertialNode::SyncWithImu()
             }
             imuMutex_.unlock();
 
+            RCLCPP_INFO(this->get_logger(), "vImuMeas size: %d", vImuMeas.size());
             Sophus::SE3f camera_pose = m_SLAM->TrackMonocular(image, tImage, vImuMeas);
 
             // Publish pose 
@@ -104,16 +106,10 @@ void MonocularInertialNode::SyncWithImu()
             m_previous_y = y;
             m_previous_z = z;
             
-            // this is for simulation
-            pose_msg->point.x = - z;
-            pose_msg->point.y = x;
-            pose_msg->point.z = y;
-
-            // this is for real world
+            pose_msg->point.x = x;
+            pose_msg->point.y = y;
+            pose_msg->point.z = z;
             
-
-            RCLCPP_DEBUG(this->get_logger(), "x: %f, y: %f, z: %f", pose_msg->point.x, pose_msg->point.y, pose_msg->point.z);
-
             m_pose_publisher->publish(*pose_msg);
             
             std::chrono::milliseconds tSleep(1);

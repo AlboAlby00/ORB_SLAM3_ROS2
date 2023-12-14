@@ -14,7 +14,7 @@ MonocularSlamNode::MonocularSlamNode(ORB_SLAM3::System* pSLAM)
         std::bind(&MonocularSlamNode::GrabImage, this, std::placeholders::_1));
     std::cout << "slam changed" << std::endl;
 
-    m_pose_publisher = this->create_publisher<PointMsg>("/crazyflie/camera_position", 10);
+    m_pose_publisher = this->create_publisher<PointMsg>("/crazyflie/camera_position_disaligned", 10);
     m_previous_time = now();
 }
 
@@ -54,9 +54,9 @@ void MonocularSlamNode::GrabImage(const ImageMsg::SharedPtr msg)
     m_previous_z = z;
     
     // this is for simulation
-    pose_msg->point.x = - z;
-    pose_msg->point.y = x;
-    pose_msg->point.z = y;
+    pose_msg->point.x = x;
+    pose_msg->point.y = y;
+    pose_msg->point.z = z;
 
     // this is for real world
 
