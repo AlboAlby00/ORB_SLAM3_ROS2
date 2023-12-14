@@ -9,7 +9,7 @@ MonocularInertialNode::MonocularInertialNode(ORB_SLAM3::System* pSLAM)
     m_SLAM = pSLAM;
 
     m_image_subscriber = this->create_subscription<ImageMsg>(
-        "camera",
+        "/camera",
         10,
         std::bind(&MonocularInertialNode::GrabImage, this, std::placeholders::_1));
 
