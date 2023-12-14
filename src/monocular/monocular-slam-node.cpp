@@ -53,16 +53,10 @@ void MonocularSlamNode::GrabImage(const ImageMsg::SharedPtr msg)
     m_previous_y = y;
     m_previous_z = z;
     
-    // this is for simulation
     pose_msg->point.x = x;
     pose_msg->point.y = y;
     pose_msg->point.z = z;
 
-    // this is for real world
-
-    //pose_msg->point.x = 0;
-    //pose_msg->point.y = 0;
-    //pose_msg->point.z = z;
 
     m_pose_publisher->publish(*pose_msg);
 
